@@ -1,0 +1,42 @@
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: custom-jenkins:22736879
+    container_name: jenkins
+    restart: unless-stopped
+
+    ports:
+      - "5555:8080"
+
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client:ro
+
+    environment:
+      DOCKER_HOST: tcp://docker:2376
+      DOCKER_CERT_PATH: /certs/client
+      DOCKER_TLS_VERIFY: "1"
+
+    depends_on:
+      - docker
+
+  docker:
+    image: docker:dind
+    container_name: jenkins-docker
+    restart: unless-stopped
+    privileged: true
+
+    environment:
+      DOCKER_TLS_CERTDIR: /certs
+
+    volumes:
+      - jenkins-docker-certs:/certs/client
+      - docker-data:/var/lib/docker
+      - jenkins-data:/var/jenkins_home
+
+volumes:
+  jenkins-data:
+  jenkins-docker-certs:
+  docker-data:
